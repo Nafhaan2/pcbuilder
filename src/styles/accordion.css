@@ -1,0 +1,352 @@
+/* --------------- CSS-Only Accordion Implementation ------------------- */
+.pcb-accordion-container {
+  /* Container for all accordion items */
+  position: relative;
+  /* Ensure proper stacking context */
+  z-index: 1;
+  /* Smooth scrolling when accordion items open/close */
+  scroll-behavior: smooth;
+  /* Contain layout changes to improve performance */
+  contain: layout;
+}
+
+.pcb-accordion-item {
+  margin-bottom: 28px;
+  /* Isolate each item's layout */
+  contain: layout style;
+  /* Ensure items don't overlap during animations */
+  position: relative;
+  z-index: 1;
+}
+
+/* Optional: Add subtle animation when items are added/removed */
+.pcb-accordion-item {
+  animation: accordionItemFadeIn 0.3s ease-out;
+}
+
+@keyframes accordionItemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------- Accordion header (unchanged) ------------------- */
+.pcb-acc-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  background: #3a3a3a;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  border: 2px solid transparent;
+  transition: border-color 0.15s ease-out, background 0.15s ease-out;
+  /* Enable GPU acceleration */
+  will-change: border-color, background;
+  transform: translateZ(0);
+}
+
+.pcb-acc-header:hover {
+  border-color: #c7c000;      /* subtle yellow glow on hover */
+}
+
+.pcb-acc-header:focus {
+  outline: 2px solid #ffe24c;
+  outline-offset: 2px;
+}
+
+.pcb-acc-header.open {
+  border-color: #ffe24c;      /* stronger yellow when open */
+}
+
+.pcb-acc-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  flex: 0 0 64px;
+  /* Optimize image rendering */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.pcb-acc-meta {
+  flex: 1 1 auto;
+  /* Prevent layout shifts */
+  min-width: 0;
+}
+
+.pcb-acc-meta .label {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pcb-acc-meta .sel-name {
+  font-size: 14px;
+  color: #d5d5d5;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcb-acc-price {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffb400;
+  margin-right: 8px;
+  /* Prevent layout shifts from price changes */
+  min-width: 80px;
+  text-align: right;
+}
+
+.pcb-acc-chevron {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* GPU acceleration for rotation */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.pcb-acc-header.open .pcb-acc-chevron {
+  transform: rotate(180deg) translateZ(0);
+}
+
+/* --------------- CSS-Only Accordion Body -------------------- */
+.pcb-acc-body {
+  /* Use grid for smooth height animations */
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #1b1b1b;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: grid-template-rows;
+}
+
+.pcb-acc-body.open {
+  grid-template-rows: 1fr;
+  border-left-color: #ffe24c;
+  border-right-color: #ffe24c;
+  border-bottom-color: #ffe24c;
+}
+
+.pcb-acc-content {
+  overflow: hidden;
+  /* Prevents content from showing during animation */
+  min-height: 0;
+}
+
+/* Alternative method using max-height if grid doesn't work well */
+@supports not (grid-template-rows: 1fr) {
+  .pcb-acc-body {
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .pcb-acc-body.open {
+    /* Large enough to contain any content */
+    max-height: 2000px;
+  }
+  
+  .pcb-acc-content {
+    /* Add padding to content when using max-height method */
+    padding: 0;
+  }
+  
+  .pcb-acc-body.open .pcb-acc-content {
+    padding: 20px 0;
+  }
+}
+
+/* --------------- Loading skeleton animation -------------------- */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* --------------- Reduce motion for accessibility -------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .pcb-acc-header,
+  .pcb-acc-chevron,
+  .pcb-acc-body {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .pcb-acc-body {
+    /* Instant open/close for reduced motion */
+    display: block;
+  }
+  
+  .pcb-acc-body:not(.open) {
+    display: none;
+  }
+}
+
+/* Add to accordion.css */
+
+/* Optimistic update pending state */
+.pcb-acc-header.pending {
+  opacity: 0.8;
+  position: relative;
+}
+
+.pending-indicator {
+  font-size: 12px;
+  color: #ffe24c;
+  margin-left: 8px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* Instant feedback for selection */
+.pcb-card {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pcb-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Optimistic selection state */
+.pcb-card.selected {
+  animation: selectPulse 0.3s ease-out;
+}
+
+@keyframes selectPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Smooth transitions for price updates */
+.pcb-acc-price {
+  transition: all 0.3s ease-out;
+}
+
+/* Visual feedback during updates */
+.pcb-acc-meta {
+  transition: opacity 0.2s ease-out;
+}
+
+.pcb-acc-header.pending .pcb-acc-meta {
+  opacity: 0.7;
+}
+
+/* Add to accordion.css - Fix for loading delay */
+
+/* Set minimum height for loading state */
+.chooser-loading {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+/* Smoother accordion animation with fixed timing */
+.pcb-acc-body {
+  /* Use grid for smooth height animations */
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #1b1b1b;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: grid-template-rows;
+}
+
+.pcb-acc-body.open {
+  grid-template-rows: 1fr;
+  border-left-color: #ffe24c;
+  border-right-color: #ffe24c;
+  border-bottom-color: #ffe24c;
+}
+
+/* Ensure minimum height during loading */
+.pcb-acc-body.open:not(.loaded) .pcb-acc-content {
+  min-height: 400px;
+}
+
+.pcb-acc-content {
+  overflow: hidden;
+  /* Prevents content from showing during animation */
+  min-height: 0;
+}
+
+/* Alternative: Use transform for smoother animation */
+@supports not (grid-template-rows: 1fr) {
+  .pcb-acc-body {
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .pcb-acc-body.open {
+    /* Set a reasonable initial height */
+    max-height: 600px;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* After content loads, allow full height */
+  .pcb-acc-body.open.loaded {
+    max-height: 3000px;
+  }
+}
+
+/* Preload indicator on hover */
+.pcb-acc-header:hover:not(.open) {
+  background: #404040;
+  cursor: pointer;
+}
+
+/* Smooth content appearance */
+.pcb-acc-body .pcb-card {
+  animation: fadeInUp 0.3s ease-out backwards;
+}
+
+.pcb-acc-body .pcb-card:nth-child(1) { animation-delay: 0.05s; }
+.pcb-acc-body .pcb-card:nth-child(2) { animation-delay: 0.1s; }
+.pcb-acc-body .pcb-card:nth-child(3) { animation-delay: 0.15s; }
+.pcb-acc-body .pcb-card:nth-child(4) { animation-delay: 0.2s; }
+.pcb-acc-body .pcb-card:nth-child(5) { animation-delay: 0.25s; }
+.pcb-acc-body .pcb-card:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
